@@ -1,0 +1,59 @@
+html{
+	text-decoration: none;
+}
+body{
+	background-color: white;
+}
+* {
+	box-sizing: border-box;
+}
+.maindiv,input,button,p{
+	border: 1px solid rgb(180,180,180);
+}
+.maindiv{
+	height: auto;
+	width: 300px;
+	background-color: rgb(225, 225, 225);
+	padding: 10px;
+	margin: 20px;
+}
+input,button{
+	padding: 10px;
+	margin-bottom: 5px;
+	
+}
+input{
+	width: 100%;
+	background-color: rgb(225, 225, 225);
+}
+button{
+	display: block;
+	background-color: rgb(200, 200, 200);
+	color: rgb(100,100,100);
+}
+p{
+	margin: 0px;
+	margin-bottom: 5px;
+	display: block;
+	padding: 3px;
+}
+
+.deletebutton, .completebutton{
+	float: right;
+	margin: 0px;
+	padding: 0px;
+	border: none;
+	background-color: rgb(225, 225, 225);
+	display: inline-block;
+}.deletebutton{
+	color: red;
+}.completebutton{
+	color: green;
+}
+
+.deletetask{
+	border-color: red;
+}
+.completetask{
+	border-color: green;
+}
