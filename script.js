@@ -24,7 +24,7 @@ async function deletetask(taskid){
     let aboba = document.getElementById(taskid);
 
     //aboba.style.borderColor='red'
-
+    
     let progressBar = document.getElementById(taskid+'progressbar');
     let progressBarMax = 10;
     let progressBarValue = 0;
