@@ -8,12 +8,12 @@ body{
 	box-sizing: border-box;
 }
 .maindiv,input,button,p{
-	border: 1px solid rgb(180,180,180);
+	border: 1px solid DarkGray;
 }
 .maindiv{
 	height: auto;
 	width: 300px;
-	background-color: rgb(225, 225, 225);
+	background-color: Gainsboro;
 	padding: 10px;
 	margin: 20px;
 }
@@ -24,12 +24,12 @@ input,button{
 }
 input{
 	width: 100%;
-	background-color: rgb(225, 225, 225);
+	background-color: Gainsboro;
 }
 button{
 	display: block;
-	background-color: rgb(200, 200, 200);
-	color: rgb(100,100,100);
+	background-color: LightGray;
+	color: DimGrey;
 }
 p{
 	margin: 0px;
@@ -45,19 +45,16 @@ progress {
 	display: block;
 	margin-bottom: 0px;
 
-	background-color: rgb(225, 225, 225);
+	background-color: Gainsboro;
 }
 progress::-webkit-progress-bar {
-	background-color: rgb(225, 225, 225);
+	background-color: Gainsboro;
 }
 progress::-webkit-progress-value {
 	background-color: red;
 } 
 progress::-moz-progress-bar {
-	color: red;
-	accent-color: red;
 	background-color: red;
-	background: red;
 }
 
 .deletebutton, .completebutton, .editbutton{
@@ -65,7 +62,7 @@ progress::-moz-progress-bar {
 	margin: 0px;
 	padding: 0px;
 	border: none;
-	background-color: rgb(225, 225, 225);
+	background-color: Gainsboro;
 	display: inline-block;
 }.deletebutton{
 	color: red;
@@ -80,4 +77,8 @@ progress::-moz-progress-bar {
 }
 .completetask{
 	border-color: green;
+}
+
+.seconddiv{
+	display: inline-block;
 }
