@@ -72,7 +72,6 @@ async function deleteTask(taskid) {
 
     dogNail(taskid);
     if(stateDictionary.deleteState[taskid] == 1){
-        //aboba.parentNode.removeChild(aboba);
         aboba[taskid].parentNode.removeChild(aboba[taskid]);
         removeDictionary(taskid);
     }else{
