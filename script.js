@@ -43,8 +43,6 @@ function removeDictionary(identify){
 var aboba = {};
 var progressBar = {};
 async function deleteTask(taskid) {
-    //let aboba = document.getElementById(taskid);
-
     aboba[taskid] = document.getElementById(taskid);
 
     stateDictionary.deleteState[taskid] = simpleStateMachine(stateDictionary.deleteState[taskid]);
