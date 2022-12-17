@@ -1,142 +1,267 @@
-var identify = 0;
-const TIMERMAX = 3000;
-var stateDictionary = {
-    deleteState: {},
-    completeState: {},
-    editState:{},
-};
+/*jshint esversion: 8 */
 
-function adddo(){
-    if(!document.getElementById("description").value){
-        console.log("input is null"+identify);
+const URL = 'https://todo-api-example-production-34ec.up.railway.app/tasks';
+
+renderTaskList();
+async function renderTaskList(){
+    console.log('RenderTaskList');
+
+    let tasklist;
+    let response;
+    try{
+        response = await fetch(URL+'?skip=0&limit=100',{
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+    }catch(err){
+        alert('The site does not work in Russia, please use the VPN of another country.');
         return;
     }
-    let description = document.getElementById("description").value;
-        mainblock.innerHTML += 
-        `
-        <p id="${identify}">${description}
-            <button id="${identify}" class="deletebutton" contenteditable='false' onclick="deleteTask(id='${identify}')">☒</button>
-            <button id="${identify}" class="completebutton" contenteditable='false' onclick="completeTask(id='${identify}')">☑</button>
-            <button id="${identify}" class="editbutton" contenteditable='false' onclick="editable(id='${identify}')">☐</button>
-            <progress id="${identify}progressbar" class="progresstodelete" value="0" max="0"></progress>
-        </p>
+
+    tasklist = await response.json();
+
+    for(let arrayid = 0; arrayid < tasklist.data.length; arrayid++){
+        if(document.getElementById(tasklist.data[arrayid].id)){
+            continue;
+        }
+
+        editStateRender(tasklist.data[arrayid].id);
+
+        let color;
+        if(tasklist.data[arrayid].isDone){
+            color = '#6abe30'; //green
+        }else{
+            color = 'gray';
+        }
+
+        const task = document.createElement('div');
+        task.setAttribute('class', 'task');
+        task.setAttribute('id', tasklist.data[arrayid].id);
+        task.setAttribute('style', `box-shadow: ${color} -3px 0px 0px`);
+
+        let details = tasklist.data[arrayid];
+
+        if(tasklist.data[arrayid].isEdited){
+            details.isEdited = 'edited';
+        }else{
+            details.isEdited = '';
+        }
+
+        const date = new Date(details.createdAt);
+        date.toLocaleString();
+
+        details.createdAt = `
+        ${date.getDate()}.${date.getMonth()+1}.${date.getFullYear()}
+        ${date.getHours()}:${date.getMinutes()}
         `;
 
-        addDictionary(identify);
-        identify ++;
-}//>adddo
+        task.innerHTML = `
+        <div class="description">
+                <div class="buttonsLeft">
+                    <button class="completeButton" onclick="completeTask(id='${details.id}')">
+                        <img src="complete.png">
+                    </button>
+                </div>
+                <p>
+                ${details.description}
+                </p>
+                <div class="buttonsRight">
+                    <button class="deleteButton" onclick="deleteTask(id='${details.id}')">
+                        <img src="delete.png">
+                    </button>
+                    <button class="editButton" onclick="editTask(id='${details.id}')">
+                        <img src="edit.png">
+                    </button>
+                </div>
+                
+            </div>
+            <div class="footer">
+                <div class="userLight">
+                    <p class="nickname">${details.username}</p>
+                    <p class="email">${details.email}</p>
+                </div>
+                <div class="userRight">
+                    <p class="edit">${details.isEdited}</p>
+                    <span>&nbsp</span>
+                    <p class="date">${details.createdAt}</p>
+                </div>
+            </div>
+        </div>
+        `;
 
-function addDictionary(identify){
-    stateDictionary.deleteState[identify] = 0;
-    stateDictionary.completeState[identify] = 0;
-    stateDictionary.editState[identify] = 0;
-}//>addDictionary
-function removeDictionary(identify){
-    delete stateDictionary.deleteState[identify];
-    delete stateDictionary.completeState[identify];
-    delete stateDictionary.editState[identify];
-
-    delete aboba[identify];
-    delete progressBar[identify];
-}//>removeDictionary
-
-var aboba = {};
-var progressBar = {};
-async function deleteTask(taskid) {
-    aboba[taskid] = document.getElementById(taskid);
-
-    stateDictionary.deleteState[taskid] = simpleStateMachine(stateDictionary.deleteState[taskid]);
-
-    //<progress bar block
-    progressBar[taskid] = document.getElementById(taskid+'progressbar')
-    let progressBarMax = 10;
-    let progressBarValue = 0;
-    zeroProgressBar();
-    function zeroProgressBar(){
-        progressBar[taskid].setAttribute("max", progressBarMax);
-        progressBar[taskid].setAttribute("value", progressBarValue);
+        block.appendChild(task);
     }
-    for(let i = 0; i <= progressBarMax; i++){
-        dogNail(taskid);
-        if(stateDictionary.deleteState[taskid] == 0){
-            zeroProgressBar();
-            return;
-        }
-        await progressBarToDelete(i);
-    }
-    async function progressBarToDelete(progressValue) {
-        progressBar[taskid].setAttribute("value", progressValue);
-        await delay(TIMERMAX / progressBarMax);
-    }
-    //>progress bar block
+}//>renderTaskList
 
-    dogNail(taskid);
-    if(stateDictionary.deleteState[taskid] == 1){
-        aboba[taskid].parentNode.removeChild(aboba[taskid]);
-        removeDictionary(taskid);
-    }else{
-        stateDictionary.deleteState[taskid] = 0;
-        zeroProgressBar();
-    }
+async function getTaskList(){ // not used
+    let response = await fetch(URL+'?skip=0&limit=100' ,{
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+    });
+}//>getTaskList
 
-}//>deleteTask
-
-function dogNail(taskid){
-    if(aboba[taskid] && aboba[taskid].parentNode){
+async function getTaskById(taskId, keyname){ // not used
+    if(!taskId || !keyname){
         return;
-    }else{
-        aboba[taskid] = document.getElementById(taskid);
-        progressBar[taskid] = document.getElementById(taskid+'progressbar');
     }
-}//>dogNail
+    let response = await fetch(URL+'/'+taskId,{
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+    });
+    let info = await response.json();
+    return await info.data[keyname];
+}//>getTaskById
 
-function completeTask(taskid){
-    let aboba = document.getElementById(taskid);
-
-    if(stateDictionary.completeState[taskid] == 1){
-        stateDictionary.completeState[taskid] = simpleStateMachine(stateDictionary.completeState[taskid]);
-        borderColorAutomate(taskid);
-    }else{
-        stateDictionary.completeState[taskid] = simpleStateMachine(stateDictionary.completeState[taskid]);
-        borderColorAutomate(taskid);
+async function addTask(){
+    createNewTask();
+}//>addTask
+async function createNewTask(){ // button 'Add task'
+    console.log('CreateNewTask');
+    if(!document.getElementById('descriptioninput').value){
+        return;
     }
-}//>completeState
+    let description = document.getElementById('descriptioninput').value;
 
-function editable(taskid) {
-    let aboba = document.getElementById(taskid);
-    
-    if(stateDictionary.editState[taskid] == 1){
-        aboba.setAttribute('contenteditable', 'false');
-        stateDictionary.editState[taskid] = simpleStateMachine(stateDictionary.editState[taskid]);
-        borderColorAutomate(taskid);
-    }else{
-        aboba.setAttribute('contenteditable', 'true');
-        stateDictionary.editState[taskid] = simpleStateMachine(stateDictionary.editState[taskid]);
-        borderColorAutomate(taskid);
+    let details = {
+        'username': 'nickname',
+        'email': 'email@email.email',
+        'description': description,
+    };
+
+    let post = {
+        method: 'POST',
+        headers:{
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(details)
+    };
+    let response = await fetch(URL, post);
+
+    if(response.ok){
+        renderTaskList();
+        document.getElementById('descriptioninput').value = '';
     }
-}//>editable
+}//>createNewTask
 
-function borderColorAutomate(taskid){
-    let aboba = document.getElementById(taskid);
+async function deleteTask(taskId){
+    deleteTaskById(taskId);
+}
+async function deleteTaskById(taskId){ //red button
+    console.log('deleteTaskById');
 
-    if(stateDictionary.editState[taskid] == 1){
-        aboba.style.borderColor='SkyBlue';
-    }else if(stateDictionary.editState[taskid] == 0 && stateDictionary.completeState[taskid] == 1){
-        aboba.style.borderColor='Green';
-    }else{
-        aboba.style.borderColor='DarkGray';
+    if(!taskId){
+        return;
     }
-}//>borderColorAutomate
-
-function simpleStateMachine(state){
-    if(state != 0){
-        state = 0;
-    }else{
-        state = 1;
+    let response = await fetch(URL+'/'+taskId,{
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+    if(response.ok){
+        localDeleteTaskById(taskId);
     }
-    return state;
+}//>deleteTaskById
+
+async function localDeleteTaskById(taskId){
+    block.removeChild(document.getElementById(taskId));
+}
+
+async function deleteAllTasks(){ // button 'Clear all'
+    console.log('deleteAllTasks');
+
+    let response = await fetch(URL,{
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+
+    if(response.ok){
+        await localDeleteAllTasks();
+    }
+}//>deleteAllTasks
+
+async function localDeleteAllTasks(){
+    console.log('localDeleteAllTasks');
+
+    let collection = document.getElementsByClassName('task');
+    for(let i = 0; i< collection.length;){
+        block.removeChild(collection[0]);
+    }
+}//>localDeleteAllTasks
+
+async function completeTask(taskId){
+    console.log('completeTask');
+    let state = await getTaskById(taskId, "isDone");
+
+    state = state === true ? false : true;
+
+    let details = {
+        'isDone': state,
+    };
+
+    let response = await fetch(URL+'/'+taskId,{
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(details)
+    });
+    if(response.ok){
+        await localCompleteTask(taskId,state);
+    }
+}
+async function localCompleteTask(taskId,state){
+    task = document.getElementById(taskId);
+    if(state){
+        task.style.boxShadow='-3px 0px 0px #6abe30';
+    }else{
+        task.style.boxShadow='-3px 0px 0px gray';
+    }
+}
+
+var editState = {};
+function editStateRender(taskId){
+    editState[taskId] = false;
+    console.log(editState);
+}
+
+async function editTask(taskId){
+    editState[taskId] = editState[taskId] === true ? false : true;
+
+    if(editState[taskId]){
+        document.getElementById(taskId).getElementsByTagName('p')[3].innerText = 'edit mode on';
+        document.getElementById(taskId).getElementsByTagName('p')[0].setAttribute('contenteditable', 'true');
+    }else{
+        let details = {
+            'description': document.getElementById(taskId).getElementsByTagName('p')[0].innerText,
+        };
+
+        let response = await fetch(URL+'/'+taskId,{
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(details)
+        });
+        if(response.ok){
+            document.getElementById(taskId).getElementsByTagName('p')[3].innerText = 'edited';
+            document.getElementById(taskId).getElementsByTagName('p')[0].setAttribute('contenteditable', 'false');
+        }
+    }
+}
+
+function simpleStateMachine(state){// not used
+    return state === 0 ? 1 : 0;
 }//>simpleStateMachine
 
-function delay(ms) {
+function delay(ms) { // not used
     return new Promise(resolve => setTimeout(resolve, ms));
 }//>delay

@@ -8,11 +8,13 @@
 	<link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
-
-	<div class="maindiv" id="mainblock">
-		<input type="text" placeholder="Enter task description" id="description">
-		<button onclick="adddo()">Add task </button>
-
+	<div class="block" id="block">
+		<input type="text" placeholder="Enter task description..." class="descriptioninput" id="descriptioninput">
+		<div class="menuButtons">
+			<button class="addTask" onclick="addTask()">Add task</button>
+			<button class="deleteAllTasks" onclick="deleteAllTasks()">Clear all</button>
+		</div>
 	</div>
 </body>
 </html>
+
