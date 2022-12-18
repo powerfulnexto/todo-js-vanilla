@@ -21,10 +21,8 @@ async function renderTaskList(){
     }
 
     tasklist = await response.json();
-    console.log(tasklist.data.taskList);
 
     for(let arrayid = 0; arrayid < tasklist.data.taskList.length; arrayid++){
-        console.log(tasklist.data.taskList[arrayid]);
         if(document.getElementById(tasklist.data.taskList[arrayid].id)){
             continue;
         }
@@ -117,7 +115,6 @@ async function getTaskById(taskId, keyname){ // not used
         },
     });
     let info = await response.json();
-    console.log(await info);
     return await info.data[keyname];
 }//>getTaskById
 
@@ -233,7 +230,6 @@ async function localCompleteTask(taskId,state){
 var editState = {};
 function editStateRender(taskId){
     editState[taskId] = false;
-    console.log(editState);
 }
 
 async function editTask(taskId){
