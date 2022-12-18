@@ -51,6 +51,11 @@ p{
 	overflow-wrap : break-word;
 }
 
+.description p{
+	display: inline-block;
+	width: 88%;
+}
+
 .block{
 	border-radius    : 10px ;
 	position         : absolute;

@@ -21,16 +21,18 @@ async function renderTaskList(){
     }
 
     tasklist = await response.json();
+    console.log(tasklist.data.taskList);
 
-    for(let arrayid = 0; arrayid < tasklist.data.length; arrayid++){
-        if(document.getElementById(tasklist.data[arrayid].id)){
+    for(let arrayid = 0; arrayid < tasklist.data.taskList.length; arrayid++){
+        console.log(tasklist.data.taskList[arrayid]);
+        if(document.getElementById(tasklist.data.taskList[arrayid].id)){
             continue;
         }
 
-        editStateRender(tasklist.data[arrayid].id);
+        editStateRender(tasklist.data.taskList[arrayid].id);
 
         let color;
-        if(tasklist.data[arrayid].isDone){
+        if(tasklist.data.taskList[arrayid].isDone){
             color = '#6abe30'; //green
         }else{
             color = 'gray';
@@ -38,12 +40,12 @@ async function renderTaskList(){
 
         const task = document.createElement('div');
         task.setAttribute('class', 'task');
-        task.setAttribute('id', tasklist.data[arrayid].id);
+        task.setAttribute('id', tasklist.data.taskList[arrayid].id);
         task.setAttribute('style', `box-shadow: ${color} -3px 0px 0px`);
 
-        let details = tasklist.data[arrayid];
+        let details = tasklist.data.taskList[arrayid];
 
-        if(tasklist.data[arrayid].isEdited){
+        if(tasklist.data.taskList[arrayid].isEdited){
             details.isEdited = 'edited';
         }else{
             details.isEdited = '';
@@ -115,6 +117,7 @@ async function getTaskById(taskId, keyname){ // not used
         },
     });
     let info = await response.json();
+    console.log(await info);
     return await info.data[keyname];
 }//>getTaskById
 
