@@ -1,6 +1,12 @@
 /*jshint esversion: 8 */
 
-const URL = 'http://151.248.126.231:8000/tasks';
+const URL = 'https://151.248.126.231.nip.io'+'/tasks';
+const color = {
+    green : '#6abe30',
+    gray : '#808080',
+    skyblue : '#87ceeb',
+    red : '#ff0000',
+};
 
 //---------------------------------RENDER---------------------------------
 
@@ -8,63 +14,86 @@ renderTaskList();
 async function renderTaskList(){
     console.log('RenderTaskList');
 
-    let tasklist, response;
+    let taskList, taskCount, response;
     try{
         response = await fetchGetAll();
     }catch(error){
         return alert('The site does not work in your country, please use the VPN of another country.');
     }
 
-    tasklist = await response.json();
+    taskList = await response.json();
+    //taskCount = await taskList.data.totalTaskCount;
+    taskList = await taskList.data.taskList;
 
-    for(let arrayid = 0; arrayid < tasklist.data.taskList.length; arrayid++){
-        if(document.getElementById(tasklist.data.taskList[arrayid].id)){
+    for(let arrayId = 0; arrayId < taskList.length; arrayId++){
+        if(document.getElementById(taskList[arrayId].id)){
             continue;
         }
 
-        editStateRender(tasklist.data.taskList[arrayid].id);
+        let details = taskList[arrayId];
 
-        let color;
-        if(tasklist.data.taskList[arrayid].isDone){
-            color = '#6abe30'; //green
-        }else{
-            color = 'gray';
-        }
+        editStateRender(details.id);
 
-        const task = document.createElement('div');
-        task.setAttribute('class', 'task');
-        task.setAttribute('id', tasklist.data.taskList[arrayid].id);
-        task.setAttribute('style', `box-shadow: ${color} -3px 0px 0px`);
+        let taskColor = isDoneStateColor(details.isDone);
+        
+        const task = createTaskElement(details.id, taskColor);
 
-        console.log(tasklist.data.taskList[arrayid]);
-        let details = tasklist.data.taskList[arrayid];
-
-        if(tasklist.data.taskList[arrayid].isEdited){
+        if(details.isEdited){
             details.isEdited = 'edited';
         }else{
             details.isEdited = '';
         }
 
-        const date = new Date(details.createdAt);
-        date.toLocaleString();
-
-        details.createdAt = `
-        ${date.getDate()}.${date.getMonth()+1}.${date.getFullYear()}
-        ${date.getHours()}:${date.getMinutes()}
-        `;
+        details.createdAt = createtDate(details.createdAt);
 
         addToHTML(task, details);
-        //deleteForHTML(tasklist); //Сейчас нет смысла юзать, заготовка на будущее.
+        deleteForHTML(taskList); //Сейчас нет смысла юзать, заготовка на будущее.
     }
 }//>renderTaskList
 
-function deleteForHTML(tasklist){
+function isDoneStateColor(isDone){
+    console.log('isDoneStateColor');
+    let taskColor;
+
+    if(isDone){
+        taskColor = color.green;
+    }else{
+        taskColor = color.gray;
+    }
+
+    return taskColor;
+}
+
+function createtDate(createdAt){
+    console.log('createtDate');
+    const date = new Date(createdAt);
+    date.toLocaleString();
+
+    createdAt = `
+    ${date.getDate()}.${date.getMonth()+1}.${date.getFullYear()}
+    ${date.getHours()}:${date.getMinutes()}
+    `;
+
+    return createdAt;
+}
+
+function createTaskElement(taskId, taskColor){
+    console.log('createTaskElement');
+    const task = document.createElement('div');
+    task.setAttribute('class', 'task');
+    task.setAttribute('id', taskId);
+    task.setAttribute('style', `box-shadow: ${taskColor} -3px 0px 0px`);
+    return task;
+}
+
+function deleteForHTML(taskList){
+    console.log('deleteForHTML');
     let task = document.getElementsByClassName('task');
     for(let i = 0,j,s = false; i < task.length; i++ , s = false){
 
-        for(j = 0; j < tasklist.data.taskList.length; j++){
+        for(j = 0; j < taskList.length; j++){
 
-            if(task[i].id==tasklist.data.taskList[j].id){
+            if(task[i].id==taskList[j].id){
                 s = true;
             }
 
@@ -77,6 +106,7 @@ function deleteForHTML(tasklist){
 }
 
 function addToHTML(task, details){
+    console.log('addToHTML');
     task.innerHTML = `
         <div class="description">
                 <div class="buttonsLeft">
@@ -84,7 +114,7 @@ function addToHTML(task, details){
                         <img src="complete.png">
                     </button>
                 </div>
-                <p>
+                <p id="description${details.id}">
                 ${details.description}
                 </p>
                 <div class="buttonsRight">
@@ -103,7 +133,7 @@ function addToHTML(task, details){
                     <p class="email">${details.email}</p>
                 </div>
                 <div class="userRight">
-                    <p class="edit">${details.isEdited}</p>
+                    <p class="edit" id="edit${details.id}">${details.isEdited}</p>
                     <span>&nbsp</span>
                     <p class="date">${details.createdAt}</p>
                 </div>
@@ -117,6 +147,7 @@ function addToHTML(task, details){
 //---------------------------------GET---------------------------------
 
 async function getTaskById(taskId, keyname){
+    console.log('getTaskById');
     if(!taskId || !keyname){
         return;
     }
@@ -132,12 +163,16 @@ async function getTaskById(taskId, keyname){
 //---------------------------------CREATE---------------------------------
 
 async function addTask(){
+    console.log('addTask');
     createNewTask();
 }//>addTask
 async function createNewTask(){ // button 'Add task'
     console.log('CreateNewTask');
 
     if(!document.getElementById('descriptioninput').value){
+        document.getElementById('descriptioninput').style.boxShadow = `inset -1px -1px ${color.red}, inset 1px 1px ${color.red}`;
+        await delay(2000);
+        document.getElementById('descriptioninput').style.boxShadow = ``;
         return;
     }
 
@@ -152,41 +187,36 @@ async function createNewTask(){ // button 'Add task'
     let response = await fetchPost(details);
 
     if(response.ok){
-        renderTaskList();
-        //localCreateNewTask(await response.json());
+        localCreateNewTask(await response.json());
         document.getElementById('descriptioninput').value = '';
     }
 }//>createNewTask
 
-function localCreateNewTask(response){ // not used
+async function localCreateNewTask(response){ // not used
+    console.log('localCreateNewTask');
     let details = response.data;
 
-    const date = new Date(details.createdAt);
-    date.toLocaleString();
+    editStateRender(details.id);
 
-    details.createdAt = `
-        ${date.getDate()}.${date.getMonth()+1}.${date.getFullYear()}
-        ${date.getHours()}:${date.getMinutes()}
-    `;
+    let taskColor = isDoneStateColor(details.isDone);
 
-    let color;
-    if(tasklist.data.taskList[arrayid].isDone){
-        color = '#6abe30'; //green
+    const task = createTaskElement(details.id, taskColor);
+
+    if(details.isEdited){
+        details.isEdited = 'edited';
     }else{
-        color = 'gray';
+        details.isEdited = '';
     }
 
-    const task = document.createElement('div');
-    task.setAttribute('class', 'task');
-    task.setAttribute('id', tasklist.data.taskList[arrayid].id);
-    task.setAttribute('style', `box-shadow: ${color} -3px 0px 0px`);
+    details.createdAt = createtDate(details.createdAt);
 
-    //addToHTML(task, details);
+    addToHTML(task, details);
 }
 
 //---------------------------------DELETE---------------------------------
 
 async function deleteTask(taskId){ 
+    console.log('deleteTask');
     deleteTaskById(taskId);
 }
 async function deleteTaskById(taskId){ //red button
@@ -199,6 +229,7 @@ async function deleteTaskById(taskId){ //red button
 }//>deleteTaskById
 
 async function localDeleteTaskById(taskId){
+    console.log('localDeleteTaskById');
     block.removeChild(document.getElementById(taskId));
 }
 
@@ -241,11 +272,12 @@ async function completeTask(taskId){
 }
 
 async function localCompleteTask(taskId,state){
+    console.log('localCompleteTask');
     task = document.getElementById(taskId);
     if(state){
-        task.style.boxShadow='-3px 0px 0px #6abe30';
+        task.style.boxShadow =`-3px 0px 0px ${color.green}`;
     }else{
-        task.style.boxShadow='-3px 0px 0px gray';
+        task.style.boxShadow =`-3px 0px 0px ${color.gray}`;
     }
 }
 
@@ -253,6 +285,7 @@ async function localCompleteTask(taskId,state){
 
 var editState = {};
 function editStateRender(taskId){
+    console.log('editStateRender');
     editState[taskId] = false;
 }
 
@@ -262,16 +295,20 @@ async function editTask(taskId){
     editState[taskId] = editState[taskId] === true ? false : true;
 
     if(editState[taskId]){
-        document.getElementById(taskId).getElementsByTagName('p')[3].innerText = 'edit mode on';
-        document.getElementById(taskId).getElementsByTagName('p')[0].setAttribute('contenteditable', 'true');
+        document.getElementById('edit'+taskId).innerText = 'edit mode on';
+        document.getElementById('description'+taskId).setAttribute('contenteditable', 'true');
+        document.getElementById('description'+taskId).style.boxShadow = `inset -1px -1px ${color.skyblue}, inset 1px 1px ${color.skyblue}`;
     }else{
         let details = {
-            'description': document.getElementById(taskId).getElementsByTagName('p')[0].innerText,
+            'description': document.getElementById('description'+taskId).innerText,
         };
+
         let response = await fetchPut(taskId, details);
+
         if(response.ok){
-            document.getElementById(taskId).getElementsByTagName('p')[3].innerText = 'edited';
-            document.getElementById(taskId).getElementsByTagName('p')[0].setAttribute('contenteditable', 'false');
+            document.getElementById(`edit${taskId}`).innerText = 'edited';
+            document.getElementById('description'+taskId).setAttribute('contenteditable', 'false');
+            document.getElementById('description'+taskId).style.boxShadow=``;
         }
     }
 }
@@ -342,8 +379,9 @@ async function fetchDeleteAll(){
 
 //---------------------------------UNUSED---------------------------------
 
-getTaskList();
+//getTaskList();
 async function getTaskList(){ // not used
+    console.log('getTaskList');
     let response = await fetchGetAll();
 
     console.log(await response.json());
