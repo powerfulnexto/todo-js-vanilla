@@ -53,15 +53,11 @@ async function renderTaskList(){
 
 function isDoneStateColor(isDone){
     console.log('isDoneStateColor');
-    let taskColor;
-
     if(isDone){
-        taskColor = color.green;
+        return color.green;
     }else{
-        taskColor = color.gray;
+        return color.gray;
     }
-
-    return taskColor;
 }
 
 function createtDate(createdAt){
@@ -178,13 +174,13 @@ async function createNewTask(){ // button 'Add task'
 
     let description = document.getElementById('descriptioninput').value;
 
-    let details = {
+    let body = {
         'username': 'nickname',
         'email': 'email@email.email',
         'description': description,
     };
 
-    let response = await fetchPost(details);
+    let response = await fetchPost(body);
 
     if(response.ok){
         localCreateNewTask(await response.json());
@@ -260,11 +256,11 @@ async function completeTask(taskId){
 
     state = state === true ? false : true;
 
-    let details = {
+    let body = {
         'isDone': state,
     };
 
-    let response = await fetchPut(taskId, details);
+    let response = await fetchPut(taskId, body);
 
     if(response.ok){
         await localCompleteTask(taskId,state);
@@ -299,11 +295,11 @@ async function editTask(taskId){
         document.getElementById('description'+taskId).setAttribute('contenteditable', 'true');
         document.getElementById('description'+taskId).style.boxShadow = `inset -1px -1px ${color.skyblue}, inset 1px 1px ${color.skyblue}`;
     }else{
-        let details = {
+        let body = {
             'description': document.getElementById('description'+taskId).innerText,
         };
 
-        let response = await fetchPut(taskId, details);
+        let response = await fetchPut(taskId, body);
 
         if(response.ok){
             document.getElementById(`edit${taskId}`).innerText = 'edited';
@@ -335,24 +331,24 @@ async function fetchGetId(taskId){
     return response;
 }
 
-async function fetchPost(details){
+async function fetchPost(body){
     let response = await fetch(URL,{
         method: 'POST',
         headers:{
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify(details)
+        body: JSON.stringify(body)
     });
     return response;
 }
 
-async function fetchPut(taskId, details){
+async function fetchPut(taskId, body){
     let response = await fetch(URL+'/'+taskId,{
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify(details)
+        body: JSON.stringify(body)
     });
     return response;
 }
