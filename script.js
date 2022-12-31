@@ -10,114 +10,86 @@ const color = {
 
 //---------------------------------RENDER---------------------------------
 
-renderTaskList();
-async function renderTaskList(){
-    console.log('RenderTaskList');
+init();
+async function init(){
+    console.log('init');
 
-    let taskList, taskCount, response;
+    let response;
     try{
-        response = await fetchGetAll();
+        response = await getAllTasks();
     }catch(error){
         return alert('The site does not work in your country, please use the VPN of another country.');
     }
 
-    taskList = await response.json();
-    //taskCount = await taskList.data.totalTaskCount;
-    taskList = await taskList.data.taskList;
+    responseJSON = await response.json();
+
+    let taskList = responseJSON.data.taskList;
+    //let taskCount = await taskList.data.totalTaskCount;
 
     for(let arrayId = 0; arrayId < taskList.length; arrayId++){
         if(document.getElementById(taskList[arrayId].id)){
             continue;
         }
 
-        let details = taskList[arrayId];
+        let taskDetails = taskList[arrayId];
 
-        editStateRender(details.id);
-
-        let taskColor = isDoneStateColor(details.isDone);
+        addEditState(taskDetails.id);
         
-        const task = createTaskElement(details.id, taskColor);
+        const taskElement = createTaskElement(taskDetails);
 
-        if(details.isEdited){
-            details.isEdited = 'edited';
-        }else{
-            details.isEdited = '';
-        }
-
-        details.createdAt = createtDate(details.createdAt);
-
-        addToHTML(task, details);
-        deleteForHTML(taskList); //Сейчас нет смысла юзать, заготовка на будущее.
+        render(taskElement, taskDetails);
     }
-}//>renderTaskList
-
-function isDoneStateColor(isDone){
-    console.log('isDoneStateColor');
-    if(isDone){
-        return color.green;
-    }else{
-        return color.gray;
-    }
+    removeFantomTasks(taskList);
 }
 
-function createtDate(createdAt){
-    console.log('createtDate');
+function convertTime(createdAt){
+    console.log('convertTime');
     const date = new Date(createdAt);
     date.toLocaleString();
 
-    createdAt = `
+    return `
     ${date.getDate().toString().padStart(2, '0')}.${(date.getMonth()+1).toString().padStart(2, '0')}.${date.getFullYear()}
     ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}
     `;
-
-    return createdAt;
 }
 
-function createTaskElement(taskId, taskColor){
+function createTaskElement(taskDetails){
     console.log('createTaskElement');
-    const task = document.createElement('div');
-    task.setAttribute('class', 'task');
-    task.setAttribute('id', taskId);
-    task.setAttribute('style', `box-shadow: ${taskColor} -3px 0px 0px`);
-    return task;
+    const taskElement = document.createElement('div');
+    taskElement.setAttribute('class', 'task');
+    taskElement.setAttribute('id', taskDetails.id);
+    taskElement.setAttribute('style', `box-shadow: ${taskDetails.isDone ? color.green : color.gray} -3px 0px 0px`);
+    return taskElement;
 }
 
-function deleteForHTML(taskList){
-    console.log('deleteForHTML');
-    let task = document.getElementsByClassName('task');
-    for(let i = 0,j,s = false; i < task.length; i++ , s = false){
+function removeFantomTasks(taskList){
+    console.log('removeFantomTasks');
 
-        for(j = 0; j < taskList.length; j++){
+    let localTaskList = document.getElementsByClassName('task');
+    localTaskList = Array.from(localTaskList);
 
-            if(task[i].id==taskList[j].id){
-                s = true;
-            }
-
-        }
-
-        if(!s){
-            block.removeChild(document.getElementById(task[i].id));
-        }
-    }
+    let fantomTaskList;
+    fantomTaskList = localTaskList.filter(localTask => !(taskList.map(serverTask => serverTask.id.toString()).includes(localTask.id)));
+    fantomTaskList.forEach(task => block.removeChild(document.getElementById(task.id)));
 }
 
-function addToHTML(task, details){
-    console.log('addToHTML');
-    task.innerHTML = `
+function render(taskElement, taskDetails){
+    console.log('render');
+    taskElement.innerHTML = `
         <div class="description">
                 <div class="buttonsLeft">
-                    <button class="completeButton" onclick="completeTask(id='${details.id}')">
+                    <button class="completeButton" onclick="completeTaskState(id='${taskDetails.id}')">
                         <img src="complete.png">
                     </button>
                 </div>
-                <p id="description${details.id}">
-                ${details.description}
+                <p id="description${taskDetails.id}">
+                ${taskDetails.description}
                 </p>
                 <div class="buttonsRight">
-                    <button class="deleteButton" onclick="deleteTask(id='${details.id}')">
+                    <button class="deleteButton" onclick="removeTask(id='${taskDetails.id}')">
                         <img src="delete.png">
                     </button>
-                    <button class="editButton" onclick="editTask(id='${details.id}')">
+                    <button class="editButton" onclick="editTask(id='${taskDetails.id}')">
                         <img src="edit.png">
                     </button>
                 </div>
@@ -125,47 +97,31 @@ function addToHTML(task, details){
             </div>
             <div class="footer">
                 <div class="userLight">
-                    <p class="nickname">${details.username}</p>
-                    <p class="email">${details.email}</p>
+                    <p class="nickname">${taskDetails.username}</p>
+                    <p class="email">${taskDetails.email}</p>
                 </div>
                 <div class="userRight">
-                    <p class="edit" id="edit${details.id}">${details.isEdited}</p>
+                    <p class="edit" id="edit${taskDetails.id}">${(taskDetails.isEdited ? 'edited' : '')}</p>
                     <span>&nbsp</span>
-                    <p class="date">${details.createdAt}</p>
+                    <p class="date">${convertTime(taskDetails.createdAt)}</p>
                 </div>
             </div>
         </div>
         `;
 
-        block.appendChild(task);
-}//>addHTML
-
-//---------------------------------GET---------------------------------
-
-async function getTaskById(taskId, keyname){
-    console.log('getTaskById');
-    if(!taskId || !keyname){
-        return;
-    }
-
-    let response = await fetchGetId(taskId);
-
-    let info = await response.json();
-
-    return info.data[keyname];
-
-}//>getTaskById
+        block.appendChild(taskElement);
+}
 
 //---------------------------------CREATE---------------------------------
 
-async function addTask(){
+async function addTask(){ // button 'Add task'
     console.log('addTask');
     createNewTask();
 }//>addTask
-async function createNewTask(){ // button 'Add task'
+async function createNewTask(){
     console.log('CreateNewTask');
 
-    if(!document.getElementById('descriptioninput').value){
+    if(!document.getElementById('descriptioninput').value){ // if description input is empty
         document.getElementById('descriptioninput').style.boxShadow = `inset -1px -1px ${color.red}, inset 1px 1px ${color.red}`;
         await delay(2000);
         document.getElementById('descriptioninput').style.boxShadow = ``;
@@ -180,108 +136,100 @@ async function createNewTask(){ // button 'Add task'
         'description': description,
     };
 
-    let response = await fetchPost(body);
+    let response = await postNewTask(body);
 
     if(response.ok){
         localCreateNewTask(await response.json());
         document.getElementById('descriptioninput').value = '';
     }
-}//>createNewTask
+}
 
 async function localCreateNewTask(response){ // not used
     console.log('localCreateNewTask');
-    let details = response.data;
+    let taskDetails = response.data;
 
-    editStateRender(details.id);
+    addEditState(taskDetails.id);
 
-    let taskColor = isDoneStateColor(details.isDone);
+    const taskElement = createTaskElement(taskDetails);
 
-    const task = createTaskElement(details.id, taskColor);
-
-    if(details.isEdited){
-        details.isEdited = 'edited';
-    }else{
-        details.isEdited = '';
-    }
-
-    details.createdAt = createtDate(details.createdAt);
-
-    addToHTML(task, details);
+    render(taskElement, taskDetails);
 }
 
 //---------------------------------DELETE---------------------------------
 
-async function deleteTask(taskId){ 
-    console.log('deleteTask');
-    deleteTaskById(taskId);
+async function removeTask(taskId){ //red button
+    console.log('removeTask');
+    removeTaskById(taskId);
 }
-async function deleteTaskById(taskId){ //red button
-    console.log('deleteTaskById');
+async function removeTaskById(taskId){
+    console.log('removeTaskById');
 
     if(!taskId) return;
 
-    response = await fetchDeleteId(taskId);
-    if(response.ok)localDeleteTaskById(taskId);
-}//>deleteTaskById
+    response = await deleteTaskById(taskId);
+    if(response.ok)localRemoveTaskById(taskId);
+}
 
-async function localDeleteTaskById(taskId){
-    console.log('localDeleteTaskById');
+async function localRemoveTaskById(taskId){
+    console.log('localRemoveTaskById');
     block.removeChild(document.getElementById(taskId));
 }
 
-async function deleteAllTasks(){ // button 'Clear all'
-    console.log('deleteAllTasks');
+//---------------------------------DELETE-ALL---------------------------------
 
-    response = await fetchDeleteAll();
+async function removeAllTasks(){ // button 'Clear all'
+    console.log('removeAllTasks');
+
+    response = await deleteAllTasks();
 
     if(response.ok){
-        await localDeleteAllTasks();
+        await localRemoveAllTasks();
     }
-}//>deleteAllTasks
+}
 
-async function localDeleteAllTasks(){
-    console.log('localDeleteAllTasks');
+async function localRemoveAllTasks(){
+    console.log('localRemoveAllTasks');
 
     let collection = document.getElementsByClassName('task');
     for(let i = 0; i< collection.length;){
         block.removeChild(collection[0]);
     }
-}//>localDeleteAllTasks
+}
 
 //---------------------------------COMPLETE---------------------------------
 
-async function completeTask(taskId){
-    console.log('completeTask');
-    let state = await getTaskById(taskId, "isDone");
+async function completeTaskState(taskId){
+    console.log('completeTaskState');
+    let completeState = await getTaskDetail(taskId, "isDone");
 
-    state = state === true ? false : true;
+    completeState = completeState === true ? false : true;
 
     let body = {
-        'isDone': state,
+        'isDone': completeState,
     };
 
-    let response = await fetchPut(taskId, body);
+    let response = await putTaskDetail(taskId, body);
 
     if(response.ok){
-        await localCompleteTask(taskId,state);
+        await localCompleteTaskState(taskId,completeState);
     }
 }
 
-async function localCompleteTask(taskId,state){
-    console.log('localCompleteTask');
-    task = document.getElementById(taskId);
+async function localCompleteTaskState(taskId,state){
+    console.log('localCompleteTaskState');
+    taskElement = document.getElementById(taskId);
     if(state){
-        task.style.boxShadow =`-3px 0px 0px ${color.green}`;
+        taskElement.style.boxShadow =`-3px 0px 0px ${color.green}`;
     }else{
-        task.style.boxShadow =`-3px 0px 0px ${color.gray}`;
+        taskElement.style.boxShadow =`-3px 0px 0px ${color.gray}`;
     }
 }
 
 //---------------------------------EDIT---------------------------------
 
 var editState = {};
-function editStateRender(taskId){
-    console.log('editStateRender');
+function addEditState(taskId){
+    console.log('addEditState');
     editState[taskId] = false;
 }
 
@@ -291,27 +239,27 @@ async function editTask(taskId){
     editState[taskId] = editState[taskId] === true ? false : true;
 
     if(editState[taskId]){
-        document.getElementById('edit'+taskId).innerText = 'edit mode on';
-        document.getElementById('description'+taskId).setAttribute('contenteditable', 'true');
-        document.getElementById('description'+taskId).style.boxShadow = `inset -1px -1px ${color.skyblue}, inset 1px 1px ${color.skyblue}`;
+        document.getElementById(`edit${taskId}`).innerText = 'edit mode on';
+        document.getElementById(`description${taskId}`).setAttribute('contenteditable', 'true');
+        document.getElementById(`description${taskId}`).style.boxShadow = `inset -1px -1px ${color.skyblue}, inset 1px 1px ${color.skyblue}`;
     }else{
         let body = {
             'description': document.getElementById('description'+taskId).innerText,
         };
 
-        let response = await fetchPut(taskId, body);
+        let response = await putTaskDetail(taskId, body);
 
         if(response.ok){
             document.getElementById(`edit${taskId}`).innerText = 'edited';
-            document.getElementById('description'+taskId).setAttribute('contenteditable', 'false');
-            document.getElementById('description'+taskId).style.boxShadow=``;
+            document.getElementById(`description${taskId}`).setAttribute('contenteditable', 'false');
+            document.getElementById(`description${taskId}`).style.boxShadow=``;
         }
     }
 }
 
 //---------------------------------FETCHS---------------------------------
 
-async function fetchGetAll(){
+async function getAllTasks(){
     let response = await fetch(URL+'?skip=0&limit=100' ,{
         method: 'GET',
         headers: {
@@ -321,7 +269,7 @@ async function fetchGetAll(){
     return response;
 }
 
-async function fetchGetId(taskId){
+async function getTaskById(taskId){
     let response = await fetch(URL+'/'+taskId,{
         method: 'GET',
         headers: {
@@ -331,7 +279,7 @@ async function fetchGetId(taskId){
     return response;
 }
 
-async function fetchPost(body){
+async function postNewTask(body){
     let response = await fetch(URL,{
         method: 'POST',
         headers:{
@@ -342,7 +290,7 @@ async function fetchPost(body){
     return response;
 }
 
-async function fetchPut(taskId, body){
+async function putTaskDetail(taskId, body){
     let response = await fetch(URL+'/'+taskId,{
         method: 'PUT',
         headers: {
@@ -353,7 +301,7 @@ async function fetchPut(taskId, body){
     return response;
 }
 
-async function fetchDeleteId(taskId){
+async function deleteTaskById(taskId){
     let response = await fetch(URL+'/'+taskId,{
         method: 'DELETE',
         headers: {
@@ -363,7 +311,7 @@ async function fetchDeleteId(taskId){
     return response;
 }
 
-async function fetchDeleteAll(){
+async function deleteAllTasks(){
     let response = await fetch(URL,{
         method: 'DELETE',
         headers: {
@@ -373,20 +321,32 @@ async function fetchDeleteAll(){
     return response;
 }
 
-//---------------------------------UNUSED---------------------------------
+//---------------------------------OTHER---------------------------------
 
-//getTaskList();
-async function getTaskList(){ // not used
+async function getTaskDetail(taskId, detailsName){
+    console.log('getTaskDetail');
+    if(!taskId || !detailsName){
+        return;
+    }
+
+    let response = await getTaskById(taskId);
+
+    let taskDetails = await response.json();
+
+    return taskDetails.data[detailsName];
+}
+
+async function getTaskList(){
     console.log('getTaskList');
-    let response = await fetchGetAll();
+    let response = await getAllTasks();
 
     console.log(await response.json());
-}//>getTaskList
+}
 
-function simpleStateMachine(state){// not used
-    return state === 0 ? 1 : 0;
-}//>simpleStateMachine
+function simpleStateMachine(state){
+    return state === true ? false : true;
+}
 
-function delay(ms) { // not used
+function delay(ms) { 
     return new Promise(resolve => setTimeout(resolve, ms));
-}//>delay
+}
