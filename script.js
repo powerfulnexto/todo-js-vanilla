@@ -24,14 +24,11 @@ async function init(){
     responseJSON = await response.json();
 
     let taskList = responseJSON.data.taskList;
-    //let taskCount = await taskList.data.totalTaskCount;
 
-    for(let arrayId = 0; arrayId < taskList.length; arrayId++){
-        if(document.getElementById(taskList[arrayId].id)){
+    for(let taskDetails of taskList){
+        if(document.getElementById(taskDetails.id)){
             continue;
         }
-
-        let taskDetails = taskList[arrayId];
 
         addEditState(taskDetails.id);
         
@@ -39,6 +36,7 @@ async function init(){
 
         render(taskElement, taskDetails);
     }
+
     removeFantomTasks(taskList);
 }
 
@@ -101,7 +99,7 @@ function render(taskElement, taskDetails){
                     <p class="email">${taskDetails.email}</p>
                 </div>
                 <div class="userRight">
-                    <p class="edit" id="edit${taskDetails.id}">${(taskDetails.isEdited ? 'edited' : '')}</p>
+                    <p class="edit" id="edit${taskDetails.id}">${taskDetails.isEdited ? 'edited' : ''}</p>
                     <span>&nbsp</span>
                     <p class="date">${convertTime(taskDetails.createdAt)}</p>
                 </div>
@@ -167,6 +165,7 @@ async function removeTaskById(taskId){
     if(!taskId) return;
 
     response = await deleteTaskById(taskId);
+
     if(response.ok)localRemoveTaskById(taskId);
 }
 
@@ -190,10 +189,10 @@ async function removeAllTasks(){ // button 'Clear all'
 async function localRemoveAllTasks(){
     console.log('localRemoveAllTasks');
 
-    let collection = document.getElementsByClassName('task');
-    for(let i = 0; i< collection.length;){
-        block.removeChild(collection[0]);
-    }
+    let taskList = document.getElementsByClassName('task');
+    taskList = Array.from(taskList);
+
+    taskList.forEach(task => block.removeChild(task));
 }
 
 //---------------------------------COMPLETE---------------------------------
